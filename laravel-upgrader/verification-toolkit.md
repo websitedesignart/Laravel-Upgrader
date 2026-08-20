@@ -235,7 +235,85 @@ crashed.
 
 ---
 
-## 11. Command guard (optional hard control)
+## 11. Security applicability probes
+
+**Purpose:** decide, from evidence, which security domains are APPLICABLE / NOT APPLICABLE /
+UNKNOWN (agent §13.1) so the audit only covers surfaces the project actually has.
+
+Each probe answers one question: *does this surface exist here at all?* A **negative result is a
+finding too** — record N/A with the evidence, then skip the whole dependent domain.
+
+| Domain | Cheap evidence that it exists |
+|---|---|
+| File uploads | Upload validation rules, file-request handling, storage writes, upload form fields |
+| API | API route files, stateless auth guards, token tables/migrations, resource serializers |
+| Webhooks | Unauthenticated POST routes, signature-verification helpers, CSRF exclusions |
+| Queues / schedules | A non-sync queue driver, queued job classes, scheduled command definitions |
+| Outbound HTTP | HTTP-client usage, cURL calls, integration/SDK packages |
+| Multi-tenancy | A tenant/org foreign key on core tables, global scopes, tenant middleware |
+| Exports | Spreadsheet/CSV/PDF generation packages and the routes that stream them |
+| MFA / OAuth | Second-factor columns or packages; OAuth client tables; social-login integrations |
+
+Two cautions:
+- **Absence in one place is not absence.** A missing route file does not prove there is no API —
+  check package-registered routes too (enumerate the live router, §6).
+- **Grep proves presence, not reachability.** A hit means the domain is APPLICABLE and needs
+  auditing; it does not by itself mean the code is live (agent §3 classification still applies).
+
+---
+
+## 12. Authorization matrix testing
+
+**Purpose:** the check scanners cannot perform — whether a *valid but unauthorised* identity can
+reach data or actions.
+
+Build a small matrix from the project's own roles and resources, then test each cell:
+
+| | Owner | Same-role, different owner | Lower privilege | Unauthenticated |
+|---|---|---|---|---|
+| View | expect allow | **expect deny** | expect deny | expect deny |
+| Update / delete | expect allow | **expect deny** | expect deny | expect deny |
+| Export / download | expect allow | **expect deny** | expect deny | expect deny |
+| Admin action | deny | deny | deny | deny |
+
+Method:
+1. Authenticate as each identity (§7 in-process is fine for breadth; §8 real HTTP for the paths
+   that matter most).
+2. Request the resource **by identifier**, including identifiers the UI never shows.
+3. Repeat against the **API** as well as the web route — they frequently enforce different rules.
+4. Record the *actual* status and body, not the expected one.
+
+**A deny must be a real deny.** Treat 200 with an empty body, a redirect to a login page, or a
+"not found" that still confirms existence as results to inspect, not automatic passes. And a
+missing authorization boundary returns **200** rather than erroring, so absence of exceptions
+proves nothing.
+
+**Read-only.** Use existing fixtures or read-only verbs wherever possible; never create, mutate or
+delete real records to prove a point, and never run a mutating test suite against a real database.
+
+---
+
+## 13. Secret and exposure scanning
+
+**Purpose:** find credentials and artefacts that should never be reachable or committed.
+
+- Scan **version-control history**, not just the working tree — a rotated key still leaked if it
+  was ever committed, and the fix is rotation plus history handling, not deletion of the file.
+- Check ignore rules **before** looking for damage: environment files, key material, database
+  dumps, backup and checkpoint directories, and browser/session artefact folders.
+- Check what is reachable under the public web root: build artefacts, source maps, backups,
+  archives, dumps, and any development or profiling tooling.
+- Check runtime exposure: debug flags enabled, verbose error pages, and administrative or
+  monitoring endpoints without authorization.
+
+**Never print a secret's value** — anywhere, including the journal. Report presence, location, and
+whether it is empty, and recommend rotation when it may have been exposed. Note that
+`env('KEY', 'default')` returns `''` for a set-but-empty key, so "configured" and "non-empty" are
+different questions (agent §7).
+
+---
+
+## 14. Command guard (optional hard control)
 
 A `PreToolUse` hook can block destructive commands (`migrate:fresh`, `db:wipe`, seeding, `DROP`,
 container prune, `git reset/clean/checkout/stash/push`) before they execute.
@@ -249,7 +327,7 @@ If you build one:
 
 ---
 
-## 12. Journal
+## 15. Journal
 
 Append-only JSONL, one record per stage start/finish: stage id, objective, authorised scope,
 checkpoint reference, status, notes. Provide a `gate` operation that exits non-zero when the last
