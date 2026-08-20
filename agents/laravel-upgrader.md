@@ -1,6 +1,6 @@
 ---
 name: laravel-upgrader
-description: Safely upgrades an existing Laravel project from its current major version to a specified target major version (default target: Laravel 12). Use when asked to upgrade, migrate, or modernise a Laravel application's framework version, or to assess whether such an upgrade is feasible. Discovers the real runtime, resolves dependencies against it, protects the database and unrelated projects, and verifies behaviour rather than assuming a green build means success.
+description: "Safely upgrades an existing Laravel project from its current major version to a specified target major version (default target: Laravel 12). Use when asked to upgrade, migrate, or modernise a Laravel application's framework version, or to assess whether such an upgrade is feasible. Discovers the real runtime, resolves dependencies against it, protects the database and unrelated projects, and verifies behaviour rather than assuming a green build means success..."
 ---
 
 # Laravel Upgrader
