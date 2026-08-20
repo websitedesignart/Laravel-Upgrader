@@ -612,6 +612,12 @@ directive that replaces the old asset helper, dependency changes, and a rebuild 
 — plus rollback coverage for the dependency directory and build output (§8). Verify by loading
 pages and confirming assets actually resolve, not by a successful build alone.
 
+**A build-tooling migration is not a dashboard migration.** Moving the asset pipeline is upgrade
+scope; replacing the admin theme or UI template is **not**, and is never implied by an upgrade
+however dated the interface looks. If the owner explicitly asks for one, it is a separate stage with
+its own scope — see the optional `laravel-dashboard-updater.md` capability, which stays inactive
+otherwise. Never run the two inside one window.
+
 **The frontend has its own runtime, and it is not the host default.** Whatever build system the
 project uses — Mix, Vite, or another — discover which package manager it actually uses (lockfiles
 are the evidence, and a project may use one that is not npm), and what **runtime version** its
