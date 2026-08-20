@@ -156,7 +156,7 @@ Determine, **where each is present**:
 - **Custom frontend code** written for this application rather than shipped by a template.
 - **Frontend packages** relevant to the dashboard, and any template-specific configuration.
 
-Then answer two questions the rest of the plan depends on:
+Then answer three questions the rest of the plan depends on:
 
 - **Is there more than one frontend stack present?** Competing or layered systems are common in
   long-lived applications — two versions of the same library, two CSS frameworks, framework
@@ -165,6 +165,18 @@ Then answer two questions the rest of the plan depends on:
   both the strategy (§7) and the coexistence plan.
 - **Do different modules or areas use different templates?** A dashboard is not necessarily uniform.
   Where sections differ, they may need different strategies (§7) and must be recorded separately.
+- **Which frontend dependencies are selected at runtime rather than named in source?** Identify
+  views, layouts, partials, components or equivalent dependencies that are chosen while the
+  application runs — resolved from a variable, assembled from configuration, selected per role,
+  tenant or user, or supplied by the code that renders them. **Trace their sources far enough to
+  establish migration coupling.** Where a dependency cannot be established, **classify it UNKNOWN
+  and do not assume isolation.**
+
+  This is a discovery obligation, not a caveat. A dependency map built only from directly-named
+  references can look complete while omitting a substantial part of the real graph, and that map is
+  worse than no map: it invites confident decisions about coupling that the evidence never
+  supported. Establish what proportion of the graph you were able to resolve, and report the
+  remainder as unresolved rather than absent.
 
 Three rules keep this honest:
 
@@ -262,8 +274,11 @@ Rules that keep this honest:
 
 **No single strategy fits every project.** Decide from the actual codebase and record why.
 
-- **Layout/shell first** — replace the outer shell, keep page content working inside it. Usually the
-  safest opening move, and it surfaces CSS conflicts immediately while the blast radius is small.
+- **Layout/shell first** — replace the outer shell, keep page content working inside it. It surfaces
+  conflicts early, which is valuable. **Its blast radius depends entirely on whether the shell is
+  isolated**, so establish that before choosing it (see below): where the shell serves only this
+  scope, shell-first is well contained; where shell infrastructure is shared, it is the *widest*
+  change available, not the narrowest.
 - **Module by module** — migrate one functional area at a time, verifying each. Best where modules
   are well separated.
 - **Route-group by route-group** — where the application is organised that way.
@@ -275,6 +290,31 @@ Rules that keep this honest:
   consistency.** A dashboard that is 95% consistent and fully working beats one that is uniform and
   diminished. This does not bypass §6 — a no-equivalent element still goes to the owner as an
   explicit decision, and "retain" is one of the outcomes they may choose.
+
+### Is the migration unit actually separable?
+
+Discovering that several scopes exist does not establish that any one of them can be **changed
+independently**. Answer this before committing to a unit, because it can invalidate an otherwise
+sensible strategy.
+
+**Determine what the intended unit shares with other scopes** — layout or shell infrastructure,
+asset loading, navigation, shared components, shared initialisation, shared styling or scripts, or
+shell behaviour driven by configuration. Then establish **what changing that shared infrastructure
+would affect**: which other scopes reach it, and how much of the application that represents.
+
+Where the unit **can** be changed in isolation, proceed with the strategy the architecture suggests.
+
+Where it **cannot**, there are two honest options — and quietly proceeding is not one of them:
+
+- **Narrow the unit** to something that is genuinely separable, or
+- **Introduce a prerequisite separation stage** that decouples the shared infrastructure first, so
+  each scope owns its own. Separation is a refactor of what already exists, not part of the visual
+  migration: it should change no rendered output, and **verify that behaviour is unchanged before
+  any visual migration begins** (§9). Only then does the original strategy become viable.
+
+**This is conditional.** An architecture whose scopes are already independent needs no separation
+stage, and inventing one wastes effort. The requirement is to *establish* separability from
+evidence — not to assume it in either direction.
 
 ### The discovered architecture selects the strategy
 
