@@ -1,0 +1,66 @@
+# .gitignore for the Laravel-Upgrader agent repository.
+#
+# NOTE: this repository contains an AI agent definition and documentation - it is NOT a Laravel
+# application. A Laravel app's .gitignore would be the wrong shape here. The entries below exist
+# to make it hard to ever commit a secret or a piece of someone's real project by accident,
+# because this agent is used *inside* other people's codebases.
+
+# ---- Secrets and credentials (never commit) ----
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+id_rsa*
+id_ed25519*
+*credentials*.json
+*secrets*.json
+*token*.json
+.netrc
+auth.json
+
+# ---- Database dumps / checkpoints captured while working on a target project ----
+*.sql
+*.sql.gz
+*.dump
+*.bak
+backups/
+_checkpoints/
+
+# ---- Local Claude Code state (may contain transcripts, paths and pasted secrets) ----
+.claude/settings.local.json
+.claude/projects/
+.claude/todos/
+.claude/history.jsonl
+.claude/shell-snapshots/
+.playwright-mcp/
+
+# ---- Dependencies and build output (should a future tool/example be added) ----
+node_modules/
+vendor/
+composer.phar
+package-lock.json.bak
+
+# ---- Logs, caches, temporary files ----
+*.log
+logs/
+tmp/
+temp/
+.cache/
+__pycache__/
+*.pyc
+
+# ---- Editor / IDE ----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---- OS noise ----
+.DS_Store
+Thumbs.db
+desktop.ini
