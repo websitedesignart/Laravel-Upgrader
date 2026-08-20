@@ -166,6 +166,39 @@ client, for example, can leave a backup or export job failing silently for years
 **If `config.platform.php` is absent or disagrees with the real runtime, that is a finding**, not a
 detail: Composer will resolve against the wrong PHP. Pin it to the real runtime before resolving.
 
+### Every constrained component needs a verdict, not just a reading
+
+Discovery that only *records* a component is half the job. **The target framework constrains more
+than the language runtime**, and a component whose version is written down but never judged is a
+blocker waiting to surface late — after checkpointing, after dependency work, at the moment it is
+most expensive to discover.
+
+So identify the components this project actually relies on that the **selected target** places a
+requirement on, and produce an explicit verdict for each. Depending on the project that may include
+the language runtime and its extensions (presence *and* version, where a version is required), the
+database engine and its version, the toolchain that installs dependencies, the frontend build
+runtime where the target constrains it, and whatever else this particular project needs in order to
+run. **That list is a prompt, not a checklist** — a component missing from it still needs a verdict
+if the target constrains it, and this project may depend on something none of these names.
+
+Three rules keep the verdicts honest:
+
+- **Establish the requirement from reliable evidence**, the same way the target itself is
+  established (§0) — official documentation or the target's own declared requirements, never recall.
+- **Judge against the real runtime, never the host.** The rule at the top of this section applies to
+  every component, not only to PHP. A database version read from the wrong server, or a toolchain
+  version read from your shell rather than from the environment that will actually install, is the
+  same class of fiction.
+- **Keep the three outcomes distinct.** *Compatible* means the requirement was found and is met.
+  *No requirement* means the target constrains nothing here — record it as discovered, and never
+  let that read as "checked and compatible". *UNKNOWN* means the requirement or the actual version
+  could not be established, and it **stays UNKNOWN** (§1). Missing evidence never becomes
+  compatible.
+
+An incompatible component is a finding for the plan (§9), not something to work around here.
+Dependency *research* remains the analyst's (§11.8); the compatibility judgement, and the decision
+to act on it, are yours.
+
 **HARD STOP** if you cannot establish which runtime serves the application.
 
 ---
@@ -511,6 +544,44 @@ majors together where the intermediate states add nothing verifiable), or **STOP
 resolves, or the only viable path cannot be verified or recovered. Record which, and the evidence
 behind it. Any coordinated window runs against a verified checkpoint and changes only this
 project's own runtime, never shared or unrelated services (§15).
+
+### Quiesce the environment before a risky window
+
+Every other rule here governs what *you* do to the project. This one governs what the **project does
+back to you**. An application is rarely idle while it is being upgraded: workers keep consuming
+jobs, the scheduler keeps firing, callers keep calling. Each of those executes application code —
+against files, dependencies, configuration, caches or schema that are **mid-transition**. That is
+the half-written-vendor hazard (§4) arriving from a source you did not initiate and do not control.
+
+Before beginning risky modification:
+
+1. **Discover what is actually live.** Queue workers and processors · scheduled tasks, cron or an
+   equivalent scheduler · webhooks and other inbound callbacks · health checks and automated
+   pollers · anything else in this environment that can execute application code on its own. Find
+   this from the project and the environment, and **assume nothing about the hosting, process
+   manager, queue driver, scheduler, container arrangement or deployment shape** — discover which
+   are in use before deciding what to do about them.
+2. **Decide which can reach a transitional application.** An actor that cannot execute during the
+   window needs no action; say so and move on. Judge from evidence, not from what seems likely.
+3. **Plan quiescence explicitly, before the window opens.** Which actors will be paused, drained,
+   suspended or otherwise prevented from running; in what order; and what each step depends on.
+4. **Use the narrowest mechanism that works.** Target this project's own processes and services
+   only — never a broad or machine-wide command that could reach unrelated projects or shared
+   infrastructure (§15). Draining work in flight is usually safer than killing it.
+5. **Record what was quiesced, how you verified it stopped, and what must be restored** — the
+   record is what makes restoration reliable when the window closes, possibly under pressure.
+6. **If safe quiescence cannot be established, that is a hard stop for the affected stage** (§14).
+   Proceeding anyway means accepting that live actors may execute against a partially upgraded
+   application, and the damage — a job consumed and failed, a scheduled task run against a broken
+   tree — is often silent and discovered much later.
+
+Restoration is the other half of the same lifecycle, and it already has a home: §12 requires
+restarting long-running processes as an explicit step and **confirming they came back**. This
+section adds the beginning of that lifecycle; it does not replace or relax that requirement.
+
+This is a **safety gate for the upgrade window, not a deployment strategy.** It says nothing about
+how the application should be served or released, and it is not an argument for building
+zero-downtime machinery the project does not already have.
 
 ### Scale the ceremony to the actual risk
 
