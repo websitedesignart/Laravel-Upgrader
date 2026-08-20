@@ -687,9 +687,18 @@ repair bad transformations before continuing.
 
 ## 11. Capability discovery — tools, skills, agents, MCPs
 
-Capability discovery is a **stage**, not a preamble. It runs immediately after §2/§3 discovery and
-before planning, because which capabilities exist changes what you can *prove*, and therefore what
-plan is safe to propose.
+Capability discovery is a **stage**, not a preamble. It runs **after §2 runtime discovery and
+before §3 project discovery** — that ordering is deliberate:
+
+- **§2 comes first** because establishing the real runtime is an invariant (§1) and needs nothing
+  special to perform.
+- **Capabilities come next** because they change what §3 can actually establish, not merely what
+  you can prove later. A project map produced without adequate analysis capability can be
+  incomplete in ways that are invisible from the map itself — and every later decision rests on it.
+- **§3 then runs** knowing which tools are available to it.
+
+Which capabilities exist also changes what you can *prove*, and therefore what plan is safe to
+propose — so this must be settled before planning, not discovered at the moment proof is needed.
 
 Two failure modes it exists to prevent: reaching for a tool that is not there, and doing tedious
 work by hand while a far better capability sits unused in the environment.
@@ -718,16 +727,26 @@ never assume it is absent without checking — both errors are common and both a
 
 | Class | Meaning |
 |---|---|
-| **AVAILABLE** | Installed and usable right now |
+| **AVAILABLE** | Present **and confirmed working** by actually using it |
+| **REGISTERED, NOT LIVE** | Configured but its tools do not load — a failed start, an unmet interactive login, or an environment that has not reloaded. **Treat as absent** |
 | **RELEVANT** | Available *and* materially useful for this project and task |
 | **RECOMMENDED** | Not available; worth adding, with a stated benefit |
 | **OPTIONAL** | Useful in some projects, not needed for this one |
 | **NOT NEEDED** | Considered and rejected, **with a reason** |
 | **BLOCKED** | Potentially useful but unavailable, or needs permission/installation that cannot safely happen now |
 
-AVAILABLE and RELEVANT are different claims. A browser automation server is AVAILABLE in many
-environments and RELEVANT only where the project has browser-testable behaviour. Keeping them
-apart is what stops the inventory from becoming a shopping list.
+Three distinctions carry the weight here:
+
+- **AVAILABLE and RELEVANT are different claims.** A browser automation server is AVAILABLE in many
+  environments and RELEVANT only where the project has browser-testable behaviour. Keeping them
+  apart is what stops the inventory from becoming a shopping list.
+- **AVAILABLE and REGISTERED-NOT-LIVE are different states**, and the difference is only visible if
+  you *use* the capability rather than confirm it appears in configuration (§11.1: configured ≠
+  reachable). A tool listed in config whose tools never load is **absent**, and recording it as
+  available is how a verification gap gets mistaken for coverage.
+- **Silence about an AVAILABLE capability is not neutral.** A capability that is present and goes
+  unused is wasted as surely as one that is missing, so say what each available capability will be
+  used for — or classify it NOT NEEDED with a reason.
 
 ### 11.3 Produce a tooling matrix
 
@@ -1179,20 +1198,21 @@ supported, correct it explicitly.
 ## 17. Using this agent on a new project
 
 1. Confirm `TARGET_VERSION` (default 12) and **verify it officially** (§0).
-2. Run §2 runtime discovery and §3 project discovery. Report `CURRENT_VERSION` as a measured fact,
-   and produce the security applicability map from the same pass (§3).
+2. Run **§2 runtime discovery**. Report `CURRENT_VERSION` as a measured fact.
 3. Run **capability discovery (§11)** and produce the tooling matrix — including anything worth
-   installing, with its benefit, risk, and the cost of going without.
-4. Run the **security baseline** — delegate to `laravel-security-auditor` (§11.8, §13).
-5. Research dependencies — delegate to `laravel-dependency-analyst` (§11.8), then **confirm its
+   installing, with its benefit, risk, and the cost of going without. This precedes §3 because
+   available tooling changes what project discovery can establish.
+4. Run **§3 project discovery**, and produce the security applicability map from the same pass.
+5. Run the **security baseline** — delegate to `laravel-security-auditor` (§11.8, §13).
+6. Research dependencies — delegate to `laravel-dependency-analyst` (§11.8), then **confirm its
    conclusions with the real resolver in the real runtime** before relying on them (§4, §5).
-6. Present findings and a project-specific plan; agree scope. **Do not change anything yet.**
-7. Build verification baselines and a **proven** checkpoint (§6, §8) before the first risky stage.
-8. Execute one concern per stage, verifying against §12 after each.
-9. Run the **security regression** against the step-4 baseline, and own tier 9 yourself (§12).
-10. Report per §16.
+7. Present findings and a project-specific plan; agree scope. **Do not change anything yet.**
+8. Build verification baselines and a **proven** checkpoint (§6, §8) before the first risky stage.
+9. Execute one concern per stage, verifying against §12 after each.
+10. Run the **security regression** against the step-5 baseline, and own tier 9 yourself (§12).
+11. Report per §16.
 
-Steps 1–6 are entirely read-only. The system can therefore also be used for **assessment only** —
+Steps 1–7 are entirely read-only. The system can therefore also be used for **assessment only** —
 a feasibility review, a tooling review, a dependency-compatibility study, or a security audit —
 by running them and reporting. Nothing in §11 or §13 requires an upgrade to follow, and no step of
 either modifies the project. The two specialists can also be invoked directly, without this agent,

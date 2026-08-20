@@ -459,23 +459,47 @@ Verify availability and suitability per project; substitute freely.
 **What none of them decide:** whether behaviour is *correct*. A tool proves something happened. Only
 you and the owner judge whether it was the right thing.
 
-### 10.3 The flow
+### 10.3 The flow — run this **before** discovery, not inside it
 
-Run this at Stage 0, **before planning migration stages** — the owner needs to know the verification
-gap while the plan is still open, not after committing to it.
+**Assess capabilities first, before §5 discovery begins.** Tooling does not only affect whether the
+*migration* can be verified later — it affects the **quality of the discovery itself**, and
+discovery is what every subsequent decision rests on. A dependency map produced without adequate
+analysis capability can be incomplete in ways that are invisible from the map, and the cost of
+finding that out afterwards is a plan built on it.
+
+Two things are also **perishable**, and both argue for assessing early: the pre-migration state can
+only be captured while the original still exists, and the question "which pages actually work
+today?" gets harder to answer once anything has changed.
 
 ```
 DISCOVER          probe by capability (§10.1), not by product name
-ASSESS            classify each: available · partially available · absent
+ASSESS            classify each — see the four states below
 RECOMMEND         name concrete options for the gaps, with rationale and risk
-REPORT GAP        state exactly what cannot be verified without each missing capability
+REPORT GAP        state what is weakened in DISCOVERY, and what cannot be verified LATER
 OWNER DECIDES     approve, substitute, or decline — per capability, not all-or-nothing
 REGISTER          project-scoped, only what was approved
 VERIFY            functional smoke test — not "it appears in config"
 RESTART           if the environment requires it before tools become usable
 RE-VERIFY         confirm the capability actually works after restart
-CONTINUE          proceed, carrying forward any accepted verification gaps
+PROCEED           begin discovery (§5), carrying forward any accepted gaps
 ```
+
+**Report every capability in one of four states — including the ones already present.** An
+available capability nobody plans to use is wasted as surely as a missing one, so silence about it
+is not neutral:
+
+| State | Meaning | Report it as |
+|---|---|---|
+| **LIVE** | Present **and confirmed working** by actually using it | Available now, with what it will be used for |
+| **REGISTERED, NOT LIVE** | Configured but its tools do not load — a failed start, an unmet login, or an environment that has not reloaded | **Treat as absent** until proven otherwise (§10.4) |
+| **MISSING** | Not present | With a named example, its benefit, and its cost if declined |
+| **NOT NEEDED** | Considered and rejected for this project | With the reason |
+
+**Then say which are NECESSARY and which are merely useful**, and be precise about *for what*.
+Necessity is not a property of a tool — it depends on the stage. A capability may be optional for
+discovery and structural work while being the only way to prove interactive behaviour later. State
+the boundary rather than a blanket verdict, so the owner can approve what a stage actually requires
+instead of everything at once.
 
 ### 10.4 Registration and verification
 
