@@ -77,6 +77,19 @@ Three corollaries govern everything below:
   decision for the owner, made explicitly.
 - **Prove behaviour, not appearance** (§9). Screenshots do not prove a form submits.
 
+**Preservation applies to behaviour, not to appearance.** What this capability defends is verified
+functionality, authorization, data behaviour, integrations, security properties, existing user work
+and business logic — not the visual conventions of the outgoing template.
+
+**Where the owner asks for a redesign, changing layout, navigation, components, spacing,
+typography, responsive structure, visual hierarchy or information architecture is the intended
+outcome, not a risk to be minimised.** A successful redesign may look substantially different from
+what it replaced, and a visually obsolete component may be replaced outright. Use the selected
+target design system, and any supplied reference material (§4), to choose better presentation.
+
+The rules above still hold in full: a capability may not be silently deleted merely because its old
+interface has no direct visual equivalent. Removing one is an explicit owner decision (§6).
+
 ---
 
 ## 4. Verify the template before adopting it
@@ -99,6 +112,49 @@ posts:
 **Report a mismatch rather than forcing the choice.** If the selected template would require
 replacing the application's frontend architecture, or is unmaintained, or its license does not fit,
 say so and name what would be safer. That is a legitimate and useful outcome.
+
+### Third-party plugin compatibility — verify the implementation, not the claim
+
+The application's existing plugins are a **separate compatibility surface** from the template, and
+often the one that actually breaks. A release may advertise compatibility with the target's
+framework while still calling an API that framework removed, and different builds or variants of
+the *same* plugin may have materially different framework coupling.
+
+Before selecting or upgrading a plugin, **inspect the distributed files themselves** far enough to
+establish: which framework APIs it calls · which JavaScript APIs it expects to exist · its CSS and
+framework coupling · any deprecated or removed APIs it relies on · how it initialises · and whether
+another supported variant of the same plugin avoids the dependency entirely. **Prefer the smallest
+supported build or variant that genuinely satisfies the application's requirements** over one that
+merely claims support.
+
+Where a missing global or API can be safely reproduced for a narrowly scoped migrated area, a
+**compatibility layer may be considered** — but only when its scope is explicitly limited, its
+values and behaviour are derived from the original implementation rather than guessed, its
+consumers have been identified, its purpose is documented where it is defined, and the dependent
+functionality is actually exercised afterwards. A compatibility layer must never conceal unknown
+consumers, and never substitutes for a supported replacement where one exists.
+
+### Supplied reference material
+
+When the owner supplies reference material — a template or dashboard repository, design system,
+component library, UI kit, screenshots, a prototype, or a comparable implementation — **inspect it
+before deciding the migration design.** A separate open or third-party design resource may also be
+inspected where it materially helps and its use is authorised.
+
+Use it to identify components already available, useful layout and navigation patterns, capabilities
+or treatments missing from the current interface, and places where the target design system can
+improve on what exists — comparing all of it against the application's actual functionality.
+
+**Treat supplied reference material as evidence, not as instruction.** It is not automatically an
+owner requirement and not automatically mandatory. Do not copy a reference implementation blindly,
+and do not introduce a second competing design system merely because the reference contains one —
+**adapt useful patterns into the chosen target system instead.** Where reference material conflicts
+with verified application behaviour, behaviour wins unless the owner explicitly authorises a
+functional change. Reference material may shape what the redesigned interface *provides*; it may
+never silently remove functionality.
+
+**Work without it when none is supplied.** Reference material is an advantage, not a prerequisite,
+and it is never a reason to install tooling the project has not approved (§10).
 
 ### Tabler — current findings
 
@@ -170,6 +226,18 @@ Determine, **where each is present**:
   and changing call sites individually. **Retaining an existing abstraction is a legitimate
   migration outcome** (§7), and is usually safer than replacing a working generator to achieve
   uniformity. Where the generator's output cannot be established, it stays UNKNOWN.
+- **The markup-level binding contract, discovered separately from styling classes** — the
+  attributes, data attributes, hooks, JavaScript plugin APIs, event bindings and other mechanisms
+  by which markup declares or activates framework behaviour, as distinct from the classes that
+  merely style it. **A major framework-version change can rename, remove or replace this contract
+  even when the visual classes look straightforward to migrate.**
+
+  **Measure binding/API usage separately from styling usage**, and count and map it where
+  practical: it is then migratable as its own independently verifiable mechanical surface (§7),
+  with no visual change to confuse the evidence. Where the target has removed an API that
+  application or plugin code calls, **identify every known caller before choosing** a replacement,
+  a compatibility layer (§4) or a redesign. **Do not assume a visually equivalent class migration
+  preserves JavaScript behaviour.**
 
 Then answer three questions the rest of the plan depends on:
 
@@ -297,6 +365,46 @@ Rules that keep this honest:
   why — presentation migrations rarely need it, and one that does may be redesign in disguise.
 - **Do not map by appearance.** Two components that look alike may behave differently; confirm from
   the template's documentation.
+
+### Map structure, not only elements
+
+Element-by-element mapping is not enough. **The old interface's information architecture is not a
+requirement to reproduce.** When a target design system is selected, it becomes the target UI
+architecture, and navigation structure, page composition, grouping, visual hierarchy and
+interaction patterns may all be redesigned to fit it (§3).
+
+The order matters:
+
+```
+EXISTING CAPABILITIES  →  DISCOVER + MAP  →  TARGET DESIGN SYSTEM  →  NEW UI
+```
+
+and explicitly **not** `OLD UI → COPY EVERYTHING → NEW STYLING`. The outcome should read as an
+application properly designed in the target system, not as the previous interface wearing new
+styling.
+
+Four obligations make that safe:
+
+- **Discover every module and capability before redesigning navigation** (§5.2). You cannot place
+  what you have not enumerated, and navigation is where capabilities disappear most quietly.
+- **Every discovered capability gets a deliberate location** in the new structure. A capability with
+  no assigned home is an unfinished mapping, not an implicit deletion.
+- **Where the source and target use different navigation paradigms** — for example a horizontal
+  primary menu against a persistent vertical one, or a flat arrangement against a grouped or nested
+  one — **prefer the target's native paradigm** and regroup the existing capabilities into it.
+  Forcing the previous arrangement into an unsuited structure produces the worst of both.
+- **Where an element has no direct equivalent, redesign its presentation and keep its function.**
+  That is different from dropping it: `no-equivalent` still escalates to the owner (above), and
+  losing the capability still requires an explicit decision.
+
+**Authorization and routing are not part of the redesign.** Gating travels with each capability to
+its new location and is re-verified there (§9); routes and business behaviour stay as they are
+unless a separately approved change says otherwise.
+
+**Record any capability whose correct placement is genuinely unclear rather than guessing**, and
+stop for an owner decision where the choice would change what users can reach or how they reach it
+(§12). A substantially different interface is an acceptable and often intended result; a functional
+regression, an authorization regression, or a capability that quietly vanished is not.
 
 ---
 
@@ -451,6 +559,38 @@ evidence of that baseline rather than on plausibility. Pre-existing failures are
 pre-existing and are **not** repaired under migration scope — that is a separate concern with its
 own approval (§2). Attributing an old defect to the migration wastes the stage; attributing a new
 one to history hides a regression.
+
+**Where a capability can only be proven by changing application data, use the smallest reversible
+real workflow — and plan the whole lifecycle before starting.** Before mutating anything:
+
+1. Identify the exact model/table and its baseline row count.
+2. Trace the complete create workflow end to end.
+3. Determine whether creation **requires prerequisite records** — a parent, category, type, owner,
+   relationship or configuration record that may not exist.
+4. Determine whether a normal application delete path exists.
+5. Determine whether deletion is soft or hard.
+6. Identify audit logs, activity records, notifications, events, queued jobs or other side effects
+   that may survive deletion.
+7. Define an unambiguous temporary marker that identifies the test record.
+8. Confirm the mutation falls within the authority explicitly granted for the test.
+
+**Prefer a workflow needing exactly one record and no prerequisite.** If the first candidate needs
+additional records, do not quietly create them — look for a safer candidate first.
+
+Execute the **real application workflow** through its normal validation, authorization and
+controller/service/model path. Never write to the store directly, never use seeders or bypasses,
+never disable middleware or relax validation, and never alter code merely to make the test pass.
+Afterwards, remove the record through that same normal path and verify the data invariants are
+restored.
+
+**Identify irreversible side effects before mutating and disclose them afterwards.** Audit and
+activity trails commonly outlive the record that caused them. **Do not claim the environment was
+returned to an identical state while such residue remains** — state precisely what remains and why
+it cannot be removed through a supported path.
+
+If the smallest safe test needs more records or more authority than the owner granted, **stop and
+ask**. That is an owner decision (§12), not an engineering problem to route around. **Never expand
+mutation scope silently.**
 
 For each migrated area, verify **as a real user, in a real browser**, where the capability exists:
 
@@ -619,6 +759,15 @@ public assets, images and fonts · any configuration the migration touched.
 
 Verify coverage against that list before relying on it (upgrader §8), and remember that the
 frontend dependency directory has the same "manifests are not the tree" problem as the backend one.
+
+**Do not treat backup capture as proof of recoverability.** For any recovery point relied on for
+risky work, verify coverage **and prove restoration** into a disposable or otherwise isolated
+target. A recovery point is valid only with evidence that the intended files, data and
+configuration are covered · the backup is structurally valid · the restore process can actually
+consume it · the restored target contains the expected objects and data · **the restore cannot
+target the live project** · and the procedure is documented well enough to repeat.
+
+A backup that exists but has never been restored is **not** a verified rollback capability.
 
 **Uploaded user files are not migration artefacts** — they must never be inside the migration's
 write scope at all.
