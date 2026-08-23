@@ -611,6 +611,17 @@ For each migrated area, verify **as a real user, in a real browser**, where the 
   is where admin templates most often break.
 - **Browser console** — no new JavaScript errors. A silent console error is often the only symptom
   of a dead handler.
+- **Colour legibility** — every text/background pair in the new UI clears a contrast minimum,
+  **measured from computed styles rather than judged by eye**. The outgoing template set colours for
+  its own surfaces; carried onto the new ones they can become unreadable while the layout is
+  perfect. Two shapes recur: a rule that sets a dark background but never a text colour, so the
+  label inherits body ink and lands dark-on-dark; and a variant class used without its framework
+  base class, so an element takes the coloured background but not the matching text colour.
+  Screenshot comparison will not catch either — nothing moved.
+
+  > Read the **computed** colour, not the stylesheet, and handle every format the browser may
+  > return — `rgb()`, `rgba()` **and** `color(srgb …)`. A checker that silently skips a format it
+  > cannot parse reports a clean page while the worst failure on it goes unexamined (upgrader §11.7).
 - **Accessibility basics** — keyboard reachability of primary actions, labelled form controls,
   visible focus. Where dedicated tooling exists, use it; otherwise report coverage as partial.
 
@@ -653,6 +664,7 @@ Verify availability and suitability per project; substitute freely.
 | **Code intelligence** | Blade includes, component usage and permission gates that text search misses | A semantic code-navigation MCP | Fall back to systematic grep; expect under-reporting of dynamic includes |
 | **Diff inspection** | What a stage actually changed | Version-control tooling, usually already present | Rarely absent |
 | **Visual comparison** | Layout drift across many pages, cheaply | Screenshot-diff tooling, often part of browser automation | Manual spot checks; accept reduced coverage |
+| **Colour legibility** | Every text/background pair clears a contrast minimum — a class of defect screenshot comparison cannot see, because nothing moved | A design-audit skill such as Impeccable; any WCAG contrast auditor | Read computed colours from the rendered page and compute the ratios yourself; never judge contrast by eye |
 | **Asset/performance measurement** | Turns §8 inference into measurement | Browser performance tooling; direct file measurement | Measure what you can on disk; label the rest inference |
 | **Accessibility checking** | Part of §9's accessibility items | An accessibility MCP or CLI auditor | Manual keyboard/label checks; report partial coverage |
 | **Static analysis (CSS/JS)** | Unused CSS and duplicate libraries after migration | Frontend analysis tooling | Manual review; never remove on suspicion alone |

@@ -9,6 +9,7 @@ An AI-assisted Laravel upgrade agent for safely analyzing, planning, and executi
 | `agents/laravel-upgrader.md` | **Orchestrator.** Owns the safety invariants, the stage model, and every action that changes the project. |
 | `agents/laravel-security-auditor.md` | Read-only security audit — baseline before an upgrade, regression after, or standalone. |
 | `agents/laravel-dependency-analyst.md` | Read-only dependency research against a target framework version. |
+| `agents/laravel-dashboard-updater.md` | **Optional capability.** Dashboard/UI migration to a new design system. Driven by the orchestrator, never run standalone. |
 | `agents/laravel-upgrader-governor.md` | Reviews proposed changes **to these agents**. Invoked between projects, never during one. |
 | `laravel-upgrader/verification-toolkit.md` | Shared, portable verification patterns. |
 
