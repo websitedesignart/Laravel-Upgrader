@@ -870,6 +870,31 @@ that is **required to verify a critical operation safely** is different: proceed
 means the verification cannot be performed, and that is a BLOCKED or NOT READY outcome (§14), not
 something to paper over.
 
+**When you cannot ask, decide early rather than late.** The authorization gate above assumes an
+interactive channel. A background or otherwise non-interactive run has none — it cannot pause to
+request a capability — so "install only when authorized" silently resolves to "proceed without it",
+and nobody ever made the decision.
+
+That is acceptable where absence only narrows coverage. It is not acceptable where the absent
+capability is the only way to verify something the plan depends on. That decision belongs at
+capability-discovery time, before any change is made — not at the moment proof is needed, which is
+usually hours later and after the project has already been modified.
+
+So on a non-interactive run, for every capability classified RECOMMENDED or BLOCKED, settle one
+question immediately: **does its absence remove a verification tier (§12) that this plan relies on?**
+
+- **No** — proceed, and record the narrowed coverage in the tooling matrix and the final report.
+- **Yes** — stop at NOT READY (§14) and report what must be connected, **before** changing anything.
+  Completing an upgrade whose central claim — that the application still works — could not be tested
+  is worse than not starting it: the report reads clean and the defect ships.
+
+**Never let a fallback stand in silently for the capability it replaces.** Name the substitution and
+state what it cannot see. An in-process or HTTP-level render check exercises routing, middleware,
+authorization and templating — and can report every page returning 200 while the login controller
+itself is broken, because it authenticated directly instead of through the form. "Pages render" and
+"the application works" are different claims; a fallback that can only establish the first must say
+so in the same breath.
+
 ### 11.7 Tool trust and tool failure
 
 **A tool result is evidence, not truth.** Before repeating any tool output:

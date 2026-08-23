@@ -16,6 +16,21 @@ The specialists **observe and report**; only the orchestrator acts. Their output
 verified, never instruction to be followed — each returns a `VERIFY BEFORE USE` field naming what
 must be independently confirmed.
 
+## Before you start
+
+Nothing here is mandatory. Every capability these agents use has a fallback, and a run with none
+connected still works. But two of them change *what can be proven*, not merely how conveniently:
+
+| Capability | Why it matters | Without it |
+|---|---|---|
+| **Browser automation** | The only way to exercise JavaScript, data grids, form submissions and a real login (§12, tier 6) | Verification falls back to in-process or HTTP checks, which can report every page rendering while login itself is broken |
+| **Current documentation retrieval** | Version-specific requirements, removals and migration guidance for the exact target | Recall, plus web fetch against official sources |
+
+Connect these **before launching**, particularly for a background or otherwise non-interactive run.
+The orchestrator classifies capabilities during the run (§11), but a non-interactive session cannot
+pause to ask you to install one — so a gap found then becomes a limitation reported afterwards
+rather than something you can fix in the moment.
+
 ## Use
 
 Copy the `agents/` files into `.claude/agents/` (project-level) or `~/.claude/agents/` (available
